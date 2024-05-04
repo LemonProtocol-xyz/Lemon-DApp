@@ -3,6 +3,8 @@ import { useReadContract } from 'wagmi'
 import { abi } from "../abi/liquidStake";
 import { liquidStaking } from "../contracts";
 import ETH from "../ETH";
+import juice from '../assets/juice.png'
+import arrowcircleright from '../assets/arrow-circle-right.png'
 
 
 const Dashboard = () => {
@@ -40,7 +42,7 @@ const Dashboard = () => {
                 <p className="text-xl">Pioneer liquid staking protocol on the lisk ecosystem</p>
             </div>
             <div className="hidden lg:block">
-                <img src="src/assets/juice.png" alt="" className="h-64 w-52"/>
+                <img src={juice} alt="" className="h-64 w-52"/>
             </div>
         </div>
         <div className="md:px-20 md:pt-5 lg:pt-0">
@@ -53,14 +55,14 @@ const Dashboard = () => {
             <div className="border border-[#F1DD2B] rounded-2xl w-[19rem] mx-auto sm:mx-0">
                 <div className="flex flex-row justify-between items-center px-8  border-b border-[#F1DD2B]">
                     <p className="py-2 font-[500]">Liquid Staking</p>
-                    <span><Link to="/staking"><img src="/src/assets/arrow-circle-right.png" alt=""/></Link></span>
+                    <span><Link to="/staking"><img src={arrowcircleright} alt=""/></Link></span>
                 </div>
                 <p className="text-[#8EA700] text-3xl font-bold pt-4 pb-7 px-8">${formatNumber(totalStakedPrice)}</p>
             </div>  
             <div className="border border-[#F1DD2B] rounded-2xl w-[19rem] mx-auto sm:mx-0">
                 <div className="flex flex-row justify-between items-center px-8  border-b border-[#F1DD2B]">
                     <p className="py-2 font-[500]">$LMN Vault</p>
-                    <span><Link to="/vault"><img src="/src/assets/arrow-circle-right.png" alt=""/></Link></span>
+                    <span><Link to="/vault"><img src={arrowcircleright} alt=""/></Link></span>
                 </div>
                 <p className="text-[#8EA700] text-3xl font-bold pt-4 pb-7 px-8">$142.86M</p>
             </div>  

@@ -1,5 +1,10 @@
 import { Link, NavLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import LemonHLockupColored from '../assets/Lemon H-Lockup Colored.png'
+import Medium from '../assets/Medium.png'
+import Discord from '../assets/Discord.png'
+import Telegram from '../assets/Telegram.png'
+import X from '../assets/X.png'
 
 const NavBar = () => {
     return (
@@ -18,7 +23,7 @@ const NavBar = () => {
 
             <div className="px-5">
                 <Link to="/" className="flex items-center lg:space-x-3 rtl:space-x-reverse">
-                <img src="/src/assets/Lemon H-Lockup Colored.png" className="h-10" alt="Logo"/>
+                <img src={LemonHLockupColored} className="h-10" alt="Logo"/>
                 </Link>
             </div>
             </div>  
@@ -85,10 +90,10 @@ const NavBar = () => {
          <button className="bg-[#DBFF131A] border rounded-full border-[#AAC900] text-[#AAC900] text-xs px-6 py-3 w-full" disabled>AIRDROP</button>
         </div>
         <div className="flex flex-row justify-center px-8 text-xs">
-         <a href="" className="px-3"><span ><img src="src/assets/X.png" alt=""/></span></a>
-         <a href="" className="px-3"><span ><img src="src/assets/Medium.png" alt=""/></span></a>
-         <a href="" className="px-3"><span ><img src="src/assets/Discord.png" alt=""/></span></a>
-         <a href="" className="px-3"><span><img src="src/assets/Telegram.png" alt=""/></span></a>
+         <a href="" className="px-3"><span ><img src={X} alt=""/></span></a>
+         <a href="" className="px-3"><span ><img src={Medium} alt=""/></span></a>
+         <a href="" className="px-3"><span ><img src={Discord} alt=""/></span></a>
+         <a href="" className="px-3"><span><img src={Telegram} alt=""/></span></a>
      </div>
      </div>
   </aside>
