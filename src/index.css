@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.active{
+    @apply text-[#8EA700] rounded dark:text-[#8EA700] bg-[#fafaae] dark:bg-[#FFFFCD26] border-r-4 border-[#8EA700];
+}
