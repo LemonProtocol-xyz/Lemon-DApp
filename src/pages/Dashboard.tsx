@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useReadContract } from 'wagmi'
-import { abi } from "../abi/liquidStake";
+import { liquidStakeabi } from "../abi/liquidStake";
 import { liquidStaking } from "../contracts";
 import ETH from "../ETH";
 import juice from '../assets/juice.png'
@@ -12,7 +12,7 @@ const Dashboard = () => {
     const ethPrice = ETH()
 
     const { data: LiquidStakebalance } = useReadContract({
-        abi,
+        abi: liquidStakeabi,
         address: liquidStaking,
         functionName: 'totalStaked'
     })

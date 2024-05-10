@@ -1,12 +1,11 @@
-import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt, type BaseError, useReadContract } from "wagmi";
-import { abi } from "../abi/liquidStake";
+import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt, type BaseError } from "wagmi";
+import { liquidStakeabi } from "../abi/liquidStake";
 import { liquidStaking } from "../contracts";
 import { parseEther } from "viem";
 import { ModalComponent } from "../components/modal";
 import { Loading } from "../components/loading";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useRef } from 'react';
-import lemonicon from '../assets/lemon icon.png'
 import lemonicon2 from '../assets/lemon icon 2.png'
 import information from '../assets/information.png'
 import tickcircle from '../assets/tick-circle.png'
@@ -20,15 +19,6 @@ const Staking = () => {
         address: address,
     })
 
-    // Get Total amount of Staked ETH
-    const { data: LiquidStakebalance } = useReadContract({
-        abi,
-        address: liquidStaking,
-        functionName: 'totalStaked'
-    })
-
-    const stakeBalance = Number(LiquidStakebalance) / 10**18
-
     //Write to Stake Contract
     const { data: hash, writeContract, isPending, error } = useWriteContract()
 
@@ -38,7 +28,7 @@ const Staking = () => {
         let eth = formData.get("value") as string
         writeContract({ 
           address: liquidStaking, 
-          abi, 
+          abi: liquidStakeabi, 
           functionName: 'stake',
           args: [],
           value: parseEther(eth)
@@ -67,18 +57,7 @@ const Staking = () => {
         <div className="pb-10 lg:px-10">
             <p className="text-4xl font-bold pt-10 md:pt-0">Stake and mint</p>
             
-            <div className="border border-[#F1DD2B] rounded-2xl max-w-md mt-10">
-                <div className="flex flex-row justify-start items-center px-8  border-b border-[#F1DD2B] py-3 gap-3">
-                    <img src={lemonicon} alt=""/>
-                    <p className="py-2 font-[500]">Reward Type: $LMN</p>
-                </div>
-                <div className="px-8 pt-4 pb-8">
-                    <p className="font-[500]">APR</p>
-                    <p className="text-[#8EA700] text-3xl font-bold pb-6">15.6%</p>
-                    <p className="font-[500]">Total Staked ETH</p>
-                    <p className="text-[#8EA700] text-3xl font-bold">{stakeBalance} ETH</p>
-                </div>
-            </div> 
+            
             <div className="border border-[#F1DD2B] rounded-2xl max-w-md mt-10">
                 <div className="flex flex-row justify-start items-center px-8  border-b border-[#F1DD2B] py-3 gap-3">
                     <p className="py-2 font-[500]">Mint</p>
@@ -99,17 +78,20 @@ const Staking = () => {
                         </div>
                         <input id="input-group-1" className="bg-transparent border border-[#D4E480] text-gray-900 text-sm rounded-lg focus:ring-[#D4E480] focus:border-[#D4E480] block w-full ps-12 p-2.5  dark:bg-transparent dark:border-[#D4E480] dark:placeholder-gray-400 dark:text-white dark:focus:ring-[#D4E480] dark:focus:border-[#D4E480]" name="value" required type="text" ref={inputRef}/>
                         <div className="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none z-50">
-                            <p className="">ETH</p>
+                            <p className="">$ETH</p>
                         </div>
                     </div>
                     <div className="flex justify-end bg-[#F8FFD2] rounded-full py-1 px-5 my-4">
-                    <p className="text-[#637502] text-[14px]">Tax fee: 0 $LMN</p>
+                    <p className="text-[#637502] text-[14px]">Tax fee: 0 $ETH</p>
                     </div>
-                    <div className="flex justify-start bg-[#EEF4CC] rounded-full py-2 px-5 mt-3 mb-8 gap-2">
-                    <span><img src={information} alt=""/></span>
-                    <p className="text-[#637502] text-[14px]">Mint $lmLSK at a 1:1 ratio of staked $LSK</p>
+                    <div className="flex justify-start items-center bg-[#EEF4CC] rounded-full py-2 px-5 mt-3 mb-8 gap-2">
+                        <span><img src={information} alt=""/></span>
+                        <p className="text-[#637502] text-[14px]">Mint $lmETH at a 1:1 ratio of staked $ETH</p>
                     </div>
-                    <button className="px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" type="submit" disabled={isPending}>{isPending ? 'Confirming...' : 'Stake and Mint'}</button>
+                    <div className="w-full flex justify-center gap-3 items-center">
+                        <button className="px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" type="submit" disabled={isPending}>{isPending ? 'Confirming...' : 'Stake and Mint'}</button>
+                        <button className="px-4 py-2 text-sm text-[#8EA700] bg-transparent rounded-full border-2 border-[#8EA700] focus:ring  focus:outline-none focus:ring-[#8EA700] w-full">Unstake</button>
+                    </div>
                     
                     {isPending && 
                     <ModalComponent
@@ -135,7 +117,7 @@ const Staking = () => {
                             </div>
                         </>} 
                         message={<>
-                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">Mint & Stake Successful</p>
+                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">Mint Successful</p>
                             <div className="w-full">
                                 <a href={`https://sepolia-blockscout.lisk.com/tx/${hash}`} target="_blank" rel="noopener noreferrer" className="bg-[#8EA700] border rounded-full border-[#8EA700] text-white text-sm px-8 py-2 block">View Transaction Lisk Explorer</a>
                             </div>
