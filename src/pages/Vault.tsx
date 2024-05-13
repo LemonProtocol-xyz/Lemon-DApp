@@ -41,11 +41,11 @@ const Vault = () => {
                         <div className='flex  items-center pb-8 gap-4'>
                             <div className='w-[50%]'>
                                 <p className='text-sm text-[#556400] dark:text-[#AAC900] font-semibold'>APY:</p>
-                                <p className='text-xl font-bold'>{APR}</p>
+                                <p className='text-xl font-bold'>{APR}%</p>
                             </div>
                             <div>
                                 <p className='text-sm text-[#556400] dark:text-[#AAC900] font-semibold'>Lockup Time:</p>
-                                <p className='text-xl font-bold'>{time}</p>
+                                <p className='text-xl font-bold'>{time} Months</p>
                             </div>
                         </div>
                         <div className='flex  items-center pb-4 gap-4'>
@@ -55,7 +55,7 @@ const Vault = () => {
                             </div>
                             <div>
                                 <p className='text-sm text-[#556400] dark:text-[#AAC900] font-semibold'>TVL:</p>
-                                <p className='text-xl font-bold'>30 <span className='text-xs font-semibold'>$lmETH</span></p>
+                                <p className='text-xl font-bold'>0 <span className='text-xs font-semibold'>$lmETH</span></p>
                             </div>
                         </div>
 

@@ -20,25 +20,26 @@ const Staking = () => {
     })
 
     //Write to Stake Contract
-    const { data: hash, writeContract, isPending, error } = useWriteContract()
+    const { data: hash1, writeContract: writeContract1, isPending: isPending1, error: error1 } = useWriteContract()
+    // const { data: hash2, writeContract: writeContract2, isPending: isPending2, error: erro2 } = useWriteContract()
 
     async function StakeAndMint(e: React.FormEvent<HTMLFormElement>) { 
         e.preventDefault() 
         const formData = new FormData(e.target as HTMLFormElement) 
         let eth = formData.get("value") as string
-        writeContract({ 
-          address: liquidStaking, 
-          abi: liquidStakeabi, 
-          functionName: 'stake',
-          args: [],
-          value: parseEther(eth)
+        writeContract1({ 
+            address: liquidStaking, 
+            abi: liquidStakeabi, 
+            functionName: 'stake',
+            args: [],
+            value: parseEther(eth)
         }) 
-      } 
+    } 
 
       //Hook for confirming transaction
       const { isLoading: isConfirming, isSuccess: isConfirmed } = 
         useWaitForTransactionReceipt({ 
-        hash, 
+        hash: hash1, 
         }) 
 
         const inputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,7 @@ const Staking = () => {
             }
         }
 
+        
     return (
     <>
         <div className="p-4 sm:pl-72 pt-20 min-h-[100vh] backdrop-blur-2xl dark:backdrop-blur-2xl backdrop-brightness-[1.3] dark:backdrop-brightness-[0.2] bg-white/[0.5] dark:bg-[#2A2A2A]/[0.5]" >  
@@ -76,7 +78,7 @@ const Staking = () => {
                         <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <img src={lemonicon2} alt=""/>
                         </div>
-                        <input id="input-group-1" className="bg-transparent border border-[#D4E480] text-gray-900 text-sm rounded-lg focus:ring-[#D4E480] focus:border-[#D4E480] block w-full ps-12 p-2.5  dark:bg-transparent dark:border-[#D4E480] dark:placeholder-gray-400 dark:text-white dark:focus:ring-[#D4E480] dark:focus:border-[#D4E480]" name="value" required type="text" ref={inputRef}/>
+                        <input id="input-group-1" className="bg-transparent border border-[#D4E480] text-gray-900 text-sm rounded-lg focus:ring-[#D4E480] focus:border-[#D4E480] block w-full ps-14 p-2.5  dark:bg-transparent dark:border-[#D4E480] dark:placeholder-gray-400 dark:text-white dark:focus:ring-[#D4E480] dark:focus:border-[#D4E480]" name="value" required type="text" ref={inputRef} />
                         <div className="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none z-50">
                             <p className="">$ETH</p>
                         </div>
@@ -89,11 +91,11 @@ const Staking = () => {
                         <p className="text-[#637502] text-[14px]">Mint $lmETH at a 1:1 ratio of staked $ETH</p>
                     </div>
                     <div className="w-full flex justify-center gap-3 items-center">
-                        <button className="px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" type="submit" disabled={isPending}>{isPending ? 'Confirming...' : 'Stake and Mint'}</button>
+                        <button className="px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" type="submit" disabled={isPending1}>{isPending1 ? 'Confirming...' : 'Stake and Mint'}</button>
                         <button className="px-4 py-2 text-sm text-[#8EA700] bg-transparent rounded-full border-2 border-[#8EA700] focus:ring  focus:outline-none focus:ring-[#8EA700] w-full">Unstake</button>
                     </div>
                     
-                    {isPending && 
+                    {isPending1 && 
                     <ModalComponent
                          icon={<Loading/>} 
                          message={
@@ -119,12 +121,12 @@ const Staking = () => {
                         message={<>
                             <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">Mint Successful</p>
                             <div className="w-full">
-                                <a href={`https://sepolia-blockscout.lisk.com/tx/${hash}`} target="_blank" rel="noopener noreferrer" className="bg-[#8EA700] border rounded-full border-[#8EA700] text-white text-sm px-8 py-2 block">View Transaction Lisk Explorer</a>
+                                <a href={`https://sepolia-blockscout.lisk.com/tx/${hash1}`} target="_blank" rel="noopener noreferrer" className="bg-[#8EA700] border rounded-full border-[#8EA700] text-white text-sm px-8 py-2 block">View Transaction Lisk Explorer</a>
                             </div>
                         </>}/>
                     } 
 
-                    {error && 
+                    {error1 && 
                     <ModalComponent 
                         icon= {<>
                             <div className="flex justify-center items-center w-full h-20">
@@ -132,7 +134,7 @@ const Staking = () => {
                             </div>
                         </>} 
                         message={<>
-                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">{(error as BaseError).shortMessage || error.message}</p>
+                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">{(error1 as BaseError).shortMessage || error1.message}</p>
                         </>}/>
                      }                    
                     </form>

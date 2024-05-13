@@ -1,4 +1,4 @@
-export const lemonLskTokenAbi = [
+export const lemonEthTokenAbi = [
     {
       "inputs": [
         {
