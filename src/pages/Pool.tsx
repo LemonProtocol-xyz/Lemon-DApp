@@ -116,12 +116,12 @@ const Pool = () => {
 
     // console.log(poolid)
 
-    const {data: allowance} = useReadContract({
-        address: lemonETHToken,
-        abi: lemonEthTokenAbi,
-        functionName: 'allowance',
-        args: [address as `0x${string}`, lemonVault]
-    })
+        const {data: allowance} = useReadContract({
+            address: lemonETHToken,
+            abi: lemonEthTokenAbi,
+            functionName: 'allowance',
+            args: [address as `0x${string}`, lemonVault]
+        })
 
     // console.log(Number(allowance))
 
@@ -160,13 +160,15 @@ const Pool = () => {
 
       const [buttonstate, setButtonstate] = useState(false)
         const expectedAMT = 1.01 * pool.amount
+        const accountAMT = Number(amount?.value)/10**18
+        // console.log(accountAMT)
         // console.log(expectedAMT)
         const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             setInputValue(event.target.value);
 
             const AMT = parseFloat(event.target.value)
 
-            if( AMT !== expectedAMT){
+            if( AMT !== expectedAMT || accountAMT < expectedAMT){
                 setButtonstate(true)
             } else{
                 setButtonstate(false)
@@ -177,23 +179,35 @@ const Pool = () => {
         
         async function vaultstaking(e: React.FormEvent<HTMLFormElement>) { 
             e.preventDefault()
-            if (Number(allowance)/10**18 < expectedAMT){
                 const formData = new FormData(e.target as HTMLFormElement) 
                 let eth = formData.get("value") as string
-                writeContract1({ 
-                    address: lemonETHToken, 
-                    abi: lemonEthTokenAbi, 
-                    functionName: 'approve',
-                    args: [lemonVault as `0x${string}`, parseEther(eth)]
-                }) 
-            } else{
-                
-            }
+                if (Number(allowance)/10**18 < expectedAMT){
+                    writeContract1({ 
+                        address: lemonETHToken, 
+                        abi: lemonEthTokenAbi, 
+                        functionName: 'approve',
+                        args: [lemonVault as `0x${string}`, parseEther(eth)]
+                    },{onSuccess() {
+                        writeContract1({ 
+                            address: lemonVault, 
+                            abi: lemonVaultAbi, 
+                            functionName: 'joinPool',
+                            args: [BigInt(poolid)]
+                        }) 
+                    },})
+                } else {
+                    writeContract1({ 
+                        address: lemonVault, 
+                        abi: lemonVaultAbi, 
+                        functionName: 'joinPool',
+                        args: [BigInt(poolid)]
+                    }) 
+                }
         }
 
         const { isLoading: isConfirming1, isSuccess: isConfirmed1 } = 
-        useWaitForTransactionReceipt({ 
-        hash: hash1, 
+            useWaitForTransactionReceipt({ 
+            hash: hash1,
         }) 
 
         const {data: myentryIds} = useReadContract({
@@ -357,7 +371,7 @@ const Pool = () => {
                             <div className='mt-10 border border-[#F1DD2B] rounded-xl bg-[#F1DD2B26] flex justify-between items-center p-10 gap-5'>
                             <div>
                                 <p className='text-[#556400] dark:text-[#AAC900] font-bold pb-2 text-lg'>Enter Pool</p>
-                                <p className='text-sm font-semibold'>Lock {pool.amount} $lmETH for 3 months to win 5% yields.</p>
+                                <p className='text-sm font-semibold'>Lock {pool.amount} $lmETH for {pool.time} months to win {pool.APR}% yields.</p>
                             </div>
                             <div>
                             <button className="px-5 py-1 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" onClick={() => setOpenModal2(true)}>Enter</button>
@@ -430,18 +444,9 @@ const Pool = () => {
                         <p className="text-[#637502] text-[14px] w-[95%]">1% entry fee is charged on the entry amount</p>
                     </div>
                     <div className="w-full flex justify-center gap-3 items-center">
-                        <button className={`px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full ${Number(allowance)/10**18 < expectedAMT ? 'block': 'hidden'}`} type="submit" disabled={buttonstate}>{buttonstate? `Amount must be ${expectedAMT}`: 'Approve'}</button>
+                        <button className="px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" type="submit" disabled={buttonstate}>{buttonstate? `Amount must be ${expectedAMT}`: 'Stake'}</button>
                     </div>
-                </form>
-                <button className={`px-4 py-2 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full ${Number(allowance)/10**18 < expectedAMT ? 'hidden': 'block'}`} type="submit" disabled={buttonstate} 
-                onClick={()=> 
-                    writeContract1({ 
-                        address: lemonVault, 
-                        abi: lemonVaultAbi, 
-                        functionName: 'joinPool',
-                        args: [BigInt(poolid)]
-                    }) 
-                }>{buttonstate? `Amount must be ${expectedAMT}`: 'Stake'}</button>                    
+                </form>               
                 </div>
                 </Modal.Body>
             </Modal>
