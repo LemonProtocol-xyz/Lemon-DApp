@@ -38,3 +38,36 @@ export const pools = [
         APR: 40
     }
 ]
+
+export const activepools = [
+    {
+        id: 6,
+        amount: 0.05,
+        time: 3,
+        APR: 5
+    },
+    {
+        id: 7,
+        amount: 0.1,
+        time: 9,
+        APR: 25
+    },
+    {
+        id: 8,
+        amount: 0.3,
+        time: 12,
+        APR: 35
+    },
+    {
+        id: 9,
+        amount: 0.3,
+        time: 6,
+        APR: 15
+    },
+    {
+        id: 10,
+        amount: 0.5,
+        time: 12,
+        APR: 40
+    }
+]

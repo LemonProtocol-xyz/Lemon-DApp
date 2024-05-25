@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { pools, lemonVault, lemonETHToken} from '../contracts'
+import {lemonVault, lemonETHToken} from '../contracts'
 import back from '../assets/back.png'
 import backdark from '../assets/back dark.png'
 import { useEffect, useState } from 'react'
@@ -15,6 +15,9 @@ import { Loading } from "../components/loading";
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { lemonEthTokenAbi } from '../abi/lemonEthToken'
+// import axios from 'axios'
+import { differenceInMonths, differenceInWeeks, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+
 
 const customTheme: CustomFlowbiteTheme["modal"] = {
     root:{
@@ -46,13 +49,24 @@ function formatNumber(number = 0) {
     }
 }
 
+const calculateMonthsDifference = (startTimestamp: number, endTimestamp: number): number => {
+    const startDate = new Date(startTimestamp);
+    const endDate = new Date(endTimestamp);
+  
+    const yearsDifference = endDate.getUTCFullYear() - startDate.getUTCFullYear();
+    const monthsDifference = endDate.getUTCMonth() - startDate.getUTCMonth();
+  
+    return yearsDifference * 12 + monthsDifference;
+  };
+  
+
 // const getNextSundayTimestamp = () =>{
 //     const now = new Date();
 //     const nextSunday = new Date(now);
     
 //     // Set the next Sunday
 //     nextSunday.setUTCHours(0, 0, 0, 0); // Set to midnight
-//     nextSunday.setUTCDate(now.getUTCDate() + (7 - now.getUTCDay())); // Add days to get to next Sunday
+//     nextSunday.setUTCDate(now.getUTCDate() + (14 - now.getUTCDay())); // Add days to get to next Sunday
 
 //     // Get the timestamp
 //     return nextSunday.getTime();
@@ -73,8 +87,34 @@ function formatNumber(number = 0) {
 const Pool = () => {
 
     const { param } = useParams()
-    const id = param ? parseInt(param) -1 : 0
-    const pool = pools[id]    
+    // const id = param ? parseInt(param) -1 : 0
+    // const pool = pools[id]    
+
+    const poolid = parseInt(param as string)
+
+    const {data: poolDetails} = useReadContract({
+        address: lemonVault,
+        abi: lemonVaultAbi,
+        functionName: 'pools',
+        args: [BigInt(poolid)]
+    })
+
+    const entryAmount = Number(poolDetails?.[1].entryAmount) / 10**18
+    const locktime = Number(poolDetails?.[1].lockTime) * 1000
+    const unlocktime = Number(poolDetails?.[1].unlockTime) *1000
+    const currenttime = new Date().getTime()
+    // console.log(currenttime)
+
+    const islocked = (currenttime > locktime) ? true : false
+    const iscompleted = (currenttime > unlocktime) ? true : false
+    // console.log(islocked, iscompleted)
+
+    const [monthsDifference, setMonthsDifference] = useState<number>(0);
+
+    useEffect(() => {
+        const months = calculateMonthsDifference(locktime, unlocktime);
+        setMonthsDifference(months);
+    }, [locktime, unlocktime]);
 
     //Get connect account details
     const {address} = useAccount()
@@ -86,9 +126,12 @@ const Pool = () => {
     })
 
     // const months = pool.time
+    // const months = 0
 
     // const nextSundayTimestamp = getNextSundayTimestamp()
     // const futureTimestamp = getFutureTimestamp(months);
+    // const sunday = new Date(nextSundayTimestamp)
+    // console.log(sunday)
 
     // const poolstruct = {
     //     entryAmount: BigInt(pool.amount * 10**18),
@@ -98,6 +141,7 @@ const Pool = () => {
     //     rewardRounds: 1
     // }
 
+    // console.log(poolstruct)
     // const poolhash = useReadContract({
     //     abi: lemonVaultAbi,
     //     address: lemonVault,
@@ -112,8 +156,6 @@ const Pool = () => {
     //     args: [poolhash.data as `0x${string}`]
     // })
 
-    const poolid = parseInt(param as string)
-
     // console.log(poolid)
 
         const {data: allowance} = useReadContract({
@@ -125,41 +167,63 @@ const Pool = () => {
 
     // console.log(Number(allowance))
 
-    const [countdown, setCountdown] = useState<{ days: number, hours: number, minutes: number }>({
-        days: 0,
-        hours: 0,
-        minutes: 0
-      })
+        const [openModal2, setOpenModal2] = useState(false);
 
-    const [openModal2, setOpenModal2] = useState(false);
+        const [timeLeft, setTimeLeft] = useState<{ months: number, weeks: number, days: number, hours: number, minutes: number } | null>(null);
+        const [target, setTarget] = useState<Date | null>(null);
+      
+        useEffect(() => {
+          setTarget(new Date(locktime));
+        }, [locktime]);
+      
+        useEffect(() => {
+          const calculateTimeLeft = (targetTimestamp: Date) => {
+            const now = new Date();
+            const difference = targetTimestamp.getTime() - now.getTime();
+            const targetDate = new Date(targetTimestamp);
+            
+            if (difference <= 0) {
+              return null;
+            }
+      
+            let months = differenceInMonths(targetDate, now);
+            let remainingTime = new Date(targetDate).setUTCMonth(targetDate.getMonth() - months);
 
-      useEffect(() => {
-        const calculateCountdown = () => {
-          const now = new Date();
-          const sunday = new Date(now);
-          sunday.setUTCHours(0, 0, 0, 0);
-          sunday.setUTCDate(now.getUTCDate() + (7 - now.getUTCDay()));
-    
-          const difference = sunday.getTime() - now.getTime();
-    
-          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    
-          setCountdown({ days, hours, minutes });
-        };
-    
-        const interval = setInterval(calculateCountdown, 1000);
-    
-        calculateCountdown(); // Initial calculation
-    
-        return () => clearInterval(interval);
-      }, []);
+            let weeks = differenceInWeeks(remainingTime, now);
+            remainingTime = new Date(remainingTime).setUTCDate(new Date(remainingTime).getUTCDate() - weeks * 7);
+
+            let days = differenceInDays(remainingTime, now);
+            remainingTime = new Date(remainingTime).setUTCDate(new Date(remainingTime).getUTCDate() - days);
+
+            let hours = differenceInHours(remainingTime, now);
+            remainingTime = new Date(remainingTime).setUTCHours(new Date(remainingTime).getUTCHours() - hours);
+
+            let minutes = differenceInMinutes(remainingTime, now);
+      
+            return { months, weeks, days, hours, minutes };
+          };
+      
+          const timer = setInterval(() => {
+            if (target) {
+              const timeLeft = calculateTimeLeft(target);
+              if (!timeLeft) {
+                if (target.getTime() === locktime) {
+                  setTarget(new Date(unlocktime));
+                } else {
+                  clearInterval(timer);
+                }
+              }
+              setTimeLeft(timeLeft);
+            }
+          }, 1000);
+      
+          return () => clearInterval(timer);
+        }, [target, locktime, unlocktime]);
 
       const [inputValue, setInputValue] = useState<string>('');
 
       const [buttonstate, setButtonstate] = useState(false)
-        const expectedAMT = 1.01 * pool.amount
+        const expectedAMT = 1.01 * entryAmount
         const accountAMT = Number(amount?.value)/10**18
         // console.log(accountAMT)
         // console.log(expectedAMT)
@@ -217,13 +281,6 @@ const Pool = () => {
             args: [BigInt(poolid), address as `0x${string}`]
         })
 
-        const {data: poolDetails} = useReadContract({
-            address: lemonVault,
-            abi: lemonVaultAbi,
-            functionName: 'pools',
-            args: [BigInt(poolid)]
-        })
-
         
         const {data: myentries } = useReadContracts({
             contracts: myentryIds?.map((item)=>({
@@ -258,20 +315,6 @@ const Pool = () => {
         })
 
 
-        // for (let index = 0; index < noOfPoolEntries; index++) {
-        //     const {data: poolentry} = useReadContract({
-        //         address: lemonVault,
-        //         abi: lemonVaultAbi,
-        //         functionName: 'getEntry',
-        //         args: [BigInt(poolid), BigInt(index + 1)]
-        //     })
-        //     poolentries.push(poolentry)
-        // }
-
-        // console.log(poolentries)
-        // console.log(myentryIds)
-        // console.log(Number(mypool?.[4]))
-
         function timestampToDate(timestamped:any){
             let timestamp = Number(timestamped)*1000
             const date = new Date(timestamp);
@@ -280,42 +323,74 @@ const Pool = () => {
             const localTimeString = date.toLocaleString();
             return localTimeString
         }
+
+//         const [postData, setPostData] = useState<{ data: any } | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const postDataToServer = async () => {
+//     try {
+//       // Define your data to be sent
+//       const dataToSend = {
+//         entryAmount: (pool.amount * 10**18),
+//         lockTime: (nextSundayTimestamp / 1000),
+//         unlockTime: (futureTimestamp / 1000),
+//         yieldPercentage: pool.APR,
+//         rewardRounds: 1
+//       };
+
+//       // Make a POST request using Axios
+//       const response = await axios.post('https://server-h4t6wask7a-uc.a.run.app/create', dataToSend);
+
+//       // Handle the response
+//       setPostData(response.data);
+//       setError(null); // Reset error state
+//     } catch (error: any) {
+//       // Handle errors
+//       setError(error.message);
+//       console.log(error)
+//     }
+//   }
     return(
         <>
             <div className="p-4 sm:pl-72 pt-20 min-h-[100vh] backdrop-blur-2xl dark:backdrop-blur-2xl backdrop-brightness-[1.3] dark:backdrop-brightness-[0.2] bg-white/[0.5] dark:bg-[#2A2A2A]/[0.5]">  
                 <div className="pb-10 lg:px-10">
+                {/* <div>
+      <button onClick={postDataToServer}>Send POST Request</button>
+      {postData && <p>Response: {JSON.stringify(postData)}</p>}
+      {error && <p>Error: {error}</p>}
+    </div> */}
                     <div className='flex flex-col md:flex-row gap-y-5 gap-x-5 justify-between items-center'>
                         <div className='flex justify-between items-center gap-3 w-full md:w-fit'>
                             <Link to={'/vault'}>
                                 <img src={back} alt="" className='dark:hidden'/>
                                 <img src={backdark} alt="" className='hidden dark:block'/>
                             </Link>
-                            <p className='text-[#556400] dark:text-[#AAC900] text-xl ms-5'>Pool ID: #{pool.id}</p>
+                            <p className='text-[#556400] dark:text-[#AAC900] text-xl ms-5'>Pool ID: #{param}</p>
                             <div className='p-2 bg-[#F1DD2B66] rounded-2xl py-1 px-4'>
-                                <p className='text-[#556400] dark:text-[#AAC900] font-bold'>Open</p>
+                                <p className='text-[#556400] dark:text-[#AAC900] font-bold'>{iscompleted ? 'Completed': islocked ? 'Locked': 'Open'}</p>
                             </div>
                         </div>
-                        <div className='flex flex-col justify-end'>
-                            <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold pb-1  mx-auto md:ms-auto md:me-0'>Time Left for Entry Window</p>
+                        <div className={`${iscompleted ? 'hidden' : 'flex'} flex-col justify-end `}>
+                            <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold pb-1  mx-auto md:ms-auto md:me-0'>{islocked ? 'Time Left for Pool Unlock': 'Time Left for Entry Window'}</p>
                             <div className='flex justify-between items-center'>
                                 <div className='flex flex-col justify-center'>
-                                    <p className='text-3xl font-bold'>00:</p>
+                                    <p className='text-3xl font-bold'>{formatNumber(timeLeft?.months)}:</p>
                                     <p className='text-[9px] font-semibold ms-1'>Months</p>
                                 </div>
                                 <div className='flex flex-col justify-center'>
-                                    <p className='text-3xl font-bold'>00:</p>
+                                    <p className='text-3xl font-bold'>{formatNumber(timeLeft?.weeks)}:</p>
                                     <p className='text-[9px] font-semibold ms-2'>Weeks</p>
                                 </div>
                                 <div className='flex flex-col justify-center'>
-                                    <p className='text-3xl font-bold'>{formatNumber(countdown.days)}:</p>
+                                    <p className='text-3xl font-bold'>{formatNumber(timeLeft?.days)}:</p>
                                     <p className='text-[9px] font-semibold ms-3'>Days</p>
                                 </div>
                                 <div className='flex flex-col justify-center'>
-                                    <p className='text-3xl font-bold'>{formatNumber(countdown.hours)}:</p>
+                                    <p className='text-3xl font-bold'>{formatNumber(timeLeft?.hours)}:</p>
                                     <p className='text-[9px] font-semibold ms-1'>Hours</p>
                                 </div>
                                 <div className='flex flex-col justify-center'>
-                                    <p className='text-3xl font-bold'>{formatNumber(countdown.minutes)}</p>
+                                    <p className='text-3xl font-bold'>{formatNumber(timeLeft?.minutes)}</p>
                                     <p className='text-[9px] font-semibold ms-1'>Minutes</p>
                                 </div>
                             </div>
@@ -324,19 +399,19 @@ const Pool = () => {
                     <div className='mt-10 flex justify-center gap-x-5 lg:gap-x-5 gap-y-5 flex-wrap items-center'>
                         <div className='border border-[#F1DD2B] rounded-xl p-8 w-[11rem] lg:w-[14rem]'>
                             <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold'>APY:</p>
-                            <p className='font-bold text-2xl'>{pool.APR}%</p>
+                            <p className='font-bold text-2xl'>{poolDetails?.[1].yieldPercentage}%</p>
                         </div>
                         <div className='border border-[#F1DD2B] rounded-xl p-8 w-[11rem] lg:w-[14rem] text-nowrap'>
                             <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold'>Lockup Time:</p>
-                            <p className='font-bold text-2xl'>{pool.time} Months</p>
+                            <p className='font-bold text-2xl'>{monthsDifference} Months</p>
                         </div>
-                        <div className='border border-[#F1DD2B] rounded-xl py-8 px-6 w-[11rem] lg:w-[14rem] text-nowrap'>
+                        <div className='border border-[#F1DD2B] rounded-xl py-8 px-4 w-[11rem] lg:w-[14rem] text-nowrap'>
                             <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold'>Entry Amount:</p>
-                            <p className='font-bold text-2xl'>{pool.amount} $lmETH</p>
+                            <p className='font-bold text-2xl'>{entryAmount} $lmETH</p>
                         </div>
-                        <div className='border border-[#F1DD2B] rounded-xl p-8 w-[11rem] lg:w-[14rem] text-nowrap'>
+                        <div className='border border-[#F1DD2B] rounded-xl py-8 px-4 w-[11rem] lg:w-[14rem] text-nowrap'>
                             <p className='text-[#556400] dark:text-[#AAC900] text-sm font-semibold'>Total Value Locked:</p>
-                            <p className='font-bold text-2xl'>30 $lmETH</p>
+                            <p className='font-bold text-2xl'>{noOfPoolEntries * entryAmount} $lmETH</p>
                         </div>
                     </div>
                     <div>
@@ -344,7 +419,7 @@ const Pool = () => {
                             <div className='mt-10 border border-[#F1DD2B] rounded-xl p-8'>
                             <div className='flex justify-between items-center'>
                                 <p className='text-[#556400] dark:text-[#AAC900] font-bold text-xl'>My Entries</p>  
-                                <button className="px-5 py-1 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9]" onClick={() => setOpenModal2(true)}>Enter</button>                          
+                                <button className="px-5 py-1 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9]" onClick={() => setOpenModal2(true)} disabled={islocked}>{iscompleted ? 'Completed': islocked ? 'Locked': 'Enter'}</button>                          
                             </div>        
                             <div className='overflow-auto'>
                             <table className='w-full my-5 table-auto'>
@@ -371,10 +446,10 @@ const Pool = () => {
                             <div className='mt-10 border border-[#F1DD2B] rounded-xl bg-[#F1DD2B26] flex justify-between items-center p-10 gap-5'>
                             <div>
                                 <p className='text-[#556400] dark:text-[#AAC900] font-bold pb-2 text-lg'>Enter Pool</p>
-                                <p className='text-sm font-semibold'>Lock {pool.amount} $lmETH for {pool.time} months to win {pool.APR}% yields.</p>
+                                <p className='text-sm font-semibold'>Lock {entryAmount} $lmETH for {monthsDifference} months to win {poolDetails?.[1].yieldPercentage}% yields.</p>
                             </div>
                             <div>
-                            <button className="px-5 py-1 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" onClick={() => setOpenModal2(true)}>Enter</button>
+                            <button className="px-5 py-1 text-sm text-white bg-[#8EA700] rounded-full border-2 border-[#8EA700] focus:ring-4 focus:outline-none focus:ring-[#8EA700] dark:bg-[#8EA700] hover:bg-[#8EA700]/[0.9] dark:hover:bg-[#8EA700]/[0.9] w-full" onClick={() => setOpenModal2(true)} disabled={islocked}>{iscompleted ? 'Completed': islocked ? 'Locked': 'Enter'}</button>
                             </div>
                         </div>
 
@@ -474,7 +549,7 @@ const Pool = () => {
                             </div>
                         </>} 
                         message={<>
-                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">{Number(allowance)/10**18 < expectedAMT ? 'Approval Successful': 'Stake Successful'}</p>
+                            <p className="pb-4 text-2xl font-bold text-gray-700 dark:text-white">Stake Successful</p>
                             <div className="w-full">
                                 <a href={`https://sepolia-blockscout.lisk.com/tx/${hash1}`} target="_blank" rel="noopener noreferrer" className="bg-[#8EA700] border rounded-full border-[#8EA700] text-white text-sm px-8 py-2 block">View Transaction Lisk Explorer</a>
                             </div>
